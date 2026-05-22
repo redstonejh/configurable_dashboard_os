@@ -983,11 +983,14 @@ body.panel-interacting {
 .metric-display-card {
   position: relative;
   min-height: 126px;
-  padding: 22px;
+  padding: 14px;
   border: 1px solid rgba(118, 169, 224, .26);
   border-radius: var(--radius);
   background: linear-gradient(180deg, rgba(13, 26, 43, .86), rgba(6, 14, 26, .92));
   color: var(--text-soft);
+  --panel-accent-live: var(--metric-accent);
+  --panel-border-live: var(--metric-accent);
+  --panel-text-live: var(--text);
   box-shadow: var(--shadow);
   transform: translateZ(0);
   transition: border-color .18s ease, background .18s ease, transform .18s var(--ease-out), box-shadow .18s ease;
@@ -1021,32 +1024,12 @@ body.panel-interacting {
   background-size: 4px 4px;
 }
 
-.metric-widget-placeholder {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  height: 100%;
-  color: var(--text-soft);
-  font-size: 16px;
-  font-weight: 650;
-}
-
-.metric-widget-placeholder span,
 .widget-placeholder-plus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   font-weight: 700;
-}
-
-.metric-widget-placeholder span {
-  width: 30px;
-  height: 30px;
-  border: 1px solid color-mix(in srgb, var(--metric-accent) 58%, rgba(255, 255, 255, .18));
-  color: color-mix(in srgb, var(--metric-accent) 72%, var(--text-soft));
 }
 
 .widget-placeholder {
@@ -1084,6 +1067,21 @@ body.panel-interacting {
   height: 56px;
   border: 1px solid color-mix(in srgb, var(--panel-border-live) 62%, transparent);
   font-size: 30px;
+  line-height: 1;
+  padding-bottom: 3px;
+}
+
+.metric-display-card .widget-placeholder {
+  min-height: 100%;
+  padding: 20px;
+  gap: 10px;
+}
+
+.metric-display-card .widget-placeholder-plus {
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+  padding-bottom: 2px;
 }
 
 /* Forms and detail pages */
