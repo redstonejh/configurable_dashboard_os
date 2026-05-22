@@ -290,6 +290,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove("layout-hydrating");
+    });
+  });
   window.addEventListener("resize", () => {
     window.requestAnimationFrame(refreshAllPanelMotionMetrics);
   });

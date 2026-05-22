@@ -134,6 +134,14 @@ body.panel-interacting {
   border-color: rgba(246, 183, 64, .45);
 }
 
+.layout-hydrating .db-panel,
+.layout-hydrating .db-panel *,
+.layout-hydrating .db-panel::before,
+.layout-hydrating .db-panel::after {
+  transition: none !important;
+  animation: none !important;
+}
+
 /* Toolbar */
 .dashboard-toolbar,
 .app-nav {
