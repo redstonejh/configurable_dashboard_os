@@ -561,7 +561,7 @@ body.panel-interacting {
   min-height: 232px;
 }
 
-.db-panel-collapsed .db-panel-body {
+.db-panel.db-panel-collapsed .db-panel-body {
   min-height: 0;
   max-height: 0;
   opacity: 0;
