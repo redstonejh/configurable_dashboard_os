@@ -748,6 +748,16 @@ body.panel-interacting {
   stroke: none;
 }
 
+.panel-svg-icon-move {
+  stroke-width: 2.25;
+}
+
+.panel-svg-icon-text {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.35;
+}
+
 .panel-gear .panel-gear-icon {
   width: 20px;
   height: 20px;
