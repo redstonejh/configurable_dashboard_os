@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block content %}
+{% macro panel_customizer() %}
+<div class="panel-customizer">
+  <button class="panel-gear" type="button" aria-label="Panel settings" title="Panel settings" aria-expanded="false">
+    <span class="btn-icon btn-icon-settings panel-gear-icon" aria-hidden="true"></span>
+  </button>
+  <div class="panel-menu" role="menu" aria-label="Panel customization">
+    <button class="panel-menu-btn panel-action-move" data-panel-action="move" aria-label="Move panel" title="Move panel" aria-pressed="false" type="button"><span class="panel-icon panel-icon-move" aria-hidden="true"></span></button>
+    <button class="panel-menu-btn panel-action-resize" data-panel-action="resize" aria-label="Resize panel" title="Resize panel" aria-pressed="false" type="button"><span class="panel-icon panel-icon-resize" aria-hidden="true"></span></button>
+    <button class="panel-menu-btn panel-action-pin" data-panel-action="pin" aria-label="Pin panel" title="Pin panel" aria-pressed="false" type="button"><span class="panel-icon panel-icon-pin" aria-hidden="true"></span></button>
+    <button class="panel-menu-btn panel-action-title" data-panel-action="title" aria-label="Edit panel title" title="Edit panel title" aria-pressed="false" type="button"><span class="panel-icon panel-icon-text" aria-hidden="true"></span></button>
+    <button class="panel-menu-btn panel-action-palette" data-panel-action="palette" aria-label="Panel colors" title="Panel colors" aria-pressed="false" type="button"><span class="panel-icon panel-icon-palette" aria-hidden="true"></span></button>
+    <button class="panel-menu-btn panel-action-delete" data-panel-action="delete" aria-label="Delete panel" title="Delete panel" aria-pressed="false" type="button"><span class="panel-icon panel-icon-trash" aria-hidden="true"></span></button>
+    <div class="panel-palette">
+      <span class="panel-palette-label">Theme</span>
+      <div class="panel-palette-row" aria-label="Panel theme colors">
+        {% for key in ["azure", "cyan", "emerald", "lime", "amber", "orange", "rose", "pink", "violet", "indigo"] %}
+        <button type="button" class="panel-swatch panel-swatch-{{ key }}" data-panel-theme-choice="{{ key }}" aria-label="Panel theme {{ key }}" title="Panel theme {{ key }}"></button>
+        {% endfor %}
+      </div>
+      <span class="panel-palette-label">Text</span>
+      <div class="panel-palette-row" aria-label="Panel text colors">
+        {% for key in ["frost", "black", "sky", "cyan", "mint", "lime", "rose", "pink", "amber", "orange", "violet"] %}
+        <button type="button" class="panel-text-swatch panel-text-{{ key }}" data-panel-text-choice="{{ key }}" aria-label="Text color {{ key }}" title="Text color {{ key }}"></button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+{% macro add_widget_placeholder() %}
+<div class="widget-placeholder" role="button" tabindex="0" aria-label="Add a widget">
+  <span class="widget-placeholder-plus" aria-hidden="true">+</span>
+  <span>Add a widget</span>
+</div>
+{% endmacro %}
+{% set has_dashboard_data = (stats.total | default(0)) > 0 %}
+{% if config.source_poll_enabled %}
+<script>setTimeout(() => location.reload(), 60000);</script>
+{% endif %}
+
+{% if config.source_name or has_dashboard_data %}
+<header class="dashboard-toolbar" aria-label="Dashboard controls">
+  <div class="dashboard-profile-slot">
+    <div class="dash-switcher">
+      <button class="dash-switch-btn toolbar-profile-btn" type="button" id="dash-switcher-toggle" aria-haspopup="true" aria-expanded="false">
+        <span class="toolbar-profile-icon" aria-hidden="true"></span>
+        <span>Profile 1</span>
+        <span class="dash-switch-arrow" aria-hidden="true">&#9662;</span>
+      </button>
+      <div class="dash-switch-menu" id="dash-switch-menu">
+        <a class="dash-switch-opt dash-switch-opt-active" href="/dashboard" aria-current="page">
+          <span><strong>Records</strong><small>Generic table view</small></span>
+        </a>
+        <a class="dash-switch-opt" href="/dashboard?view=sources">
+          <span><strong>Sources</strong><small>Connector placeholders</small></span>
+        </a>
+        <a class="dash-switch-opt" href="/dashboard?view=metrics">
+          <span><strong>Metrics</strong><small>Reusable summaries</small></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-toolbar-actions">
+    {% if auto_synced and auto_processed > 0 %}
+      <span class="cmd-badge">{{ auto_processed }} added</span>
+    {% elif stats.last_parse_failed_count %}
+      <span class="cmd-badge cmd-badge-warn">{{ stats.last_parse_failed_count }} parse failed</span>
+    {% elif auto_sync_failed %}
+      <span class="cmd-badge cmd-badge-warn">Sync failed</span>
+    {% elif request.query_params.get("synced") and request.query_params.get("synced") != "0" %}
+      <span class="cmd-badge">{{ request.query_params.get("synced") }} new</span>
+    {% elif request.query_params.get("sync_failed") %}
+      <span class="cmd-badge cmd-badge-warn">Sync failed</span>
+    {% endif %}
+    <button class="toolbar-action-btn" type="button">
+      <span class="toolbar-action-icon toolbar-icon-plus" aria-hidden="true"></span>
+      Add widget
+    </button>
+    <button class="toolbar-action-btn" type="button">
+      <span class="toolbar-action-icon toolbar-icon-plus" aria-hidden="true"></span>
+      Add panel
+    </button>
+    <button class="toolbar-icon-btn" type="button" aria-label="Dashboard options" title="Dashboard options">
+      <span class="toolbar-action-icon toolbar-icon-sliders" aria-hidden="true"></span>
+    </button>
+    <button class="theme-toggle toolbar-theme-toggle" type="button" aria-label="Switch dashboard theme" title="Toggle dark mode">
+      <span class="theme-icon theme-icon-day" aria-hidden="true">&#9728;</span>
+      <span class="theme-icon theme-icon-night" aria-hidden="true">&#9790;</span>
+    </button>
+    <a class="toolbar-action-btn" href="/settings"><span class="btn-icon btn-icon-settings" aria-hidden="true"></span>Customize</a>
+    <a class="panel-reset-button toolbar-action-btn toolbar-default-btn" href="/dashboard?reset_layout=1" aria-label="Reset dashboard layout" title="Reset dashboard layout">
+      <span class="toolbar-action-icon toolbar-icon-folder" aria-hidden="true"></span>
+      Default
+    </a>
+    <button class="toolbar-action-btn toolbar-save-btn" type="button">
+      <span class="toolbar-action-icon toolbar-icon-save" aria-hidden="true"></span>
+      Save layout
+    </button>
+  </div>
+</header>
+
+{% if auto_sync_failed or request.query_params.get("sync_failed") %}
+<section class="connection-empty empty-state">
+  <strong>Source sync needs attention</strong>
+  <small>The last sync could not complete. Check source settings and connector TODOs.</small>
+  <a class="empty-action" href="/settings">Open Configure</a>
+</section>
+{% endif %}
+
+{% if stats.last_parse_failed_count %}
+<section class="parse-warning">
+  <div>
+    <strong>{{ stats.last_parse_failed_count }} payload{{ "" if stats.last_parse_failed_count == 1 else "s" }} failed to parse on the last sync.</strong>
+    <small>These payloads were missing required generic record fields.</small>
+  </div>
+  {% if stats.last_parse_failed_examples %}
+    <details>
+      <summary>Show examples</summary>
+      <ul>
+        {% for item in stats.last_parse_failed_examples %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </details>
+  {% endif %}
+  <a href="/settings">Review parser fields</a>
+</section>
+{% endif %}
+
+<div class="panel-layout top-panel-layout" data-layout-key="skeleton-time-panel">
+  <section class="db-panel top-filter-panel" data-panel-key="time-filters" data-default-span="12" data-panel-theme="cyan" data-panel-text="frost">
+    <div class="db-panel-hd db-panel-hd-analytics">
+      <span class="top-panel-visible-title">
+        <span class="toolbar-action-icon toolbar-icon-calendar" aria-hidden="true"></span>
+        Time range
+      </span>
+      <span class="db-panel-title">Time range</span>
+      {{ panel_customizer() }}
+    </div>
+    <div class="db-panel-body">
+      <nav class="range-bar top-range-widget" aria-label="Dashboard view range">
+        <div class="range-controls">
+          <div class="range-presets">
+            {% for preset in range_presets %}
+              {% if preset.days not in [730, 1825] %}
+              <a class="preset-btn {% if not custom_range and active_days == preset.days %}active{% endif %}" href="/dashboard?range={{ preset.days }}{% if active_metric %}&metric={{ active_metric }}{% endif %}{% if search_query %}&q={{ search_query | urlencode }}{% endif %}">{{ preset.short }}</a>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <form class="range-custom" action="/dashboard" method="get">
+            {% if active_metric %}<input type="hidden" name="metric" value="{{ active_metric }}">{% endif %}
+            {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+            <button class="range-custom-trigger {% if custom_range %}active{% endif %}" type="button" aria-label="Choose custom date range">Custom</button>
+            <input class="range-date-input range-date-start" type="date" name="start" value="{{ view_start }}" aria-label="Start date" tabindex="-1">
+            <input class="range-date-input range-date-end" type="date" name="end" value="{{ view_end }}" aria-label="End date" tabindex="-1">
+            <span class="range-path {% if custom_range %}active{% endif %}" aria-hidden="true"></span>
+          </form>
+        </div>
+      </nav>
+    </div>
+  </section>
+</div>
+
+<section class="metric-card-row" aria-label="Dashboard metrics">
+  <button class="metric-display-card metric-card-blue" type="button">
+    <span class="metric-card-dots" aria-hidden="true"></span>
+    <span class="metric-widget-placeholder"><span aria-hidden="true">+</span>Add a widget</span>
+  </button>
+  <button class="metric-display-card metric-card-amber" type="button">
+    <span class="metric-card-dots" aria-hidden="true"></span>
+    <span class="metric-widget-placeholder"><span aria-hidden="true">+</span>Add a widget</span>
+  </button>
+  <button class="metric-display-card metric-card-violet" type="button">
+    <span class="metric-card-dots" aria-hidden="true"></span>
+    <span class="metric-widget-placeholder"><span aria-hidden="true">+</span>Add a widget</span>
+  </button>
+  <button class="metric-display-card metric-card-cyan" type="button">
+    <span class="metric-card-dots" aria-hidden="true"></span>
+    <span class="metric-widget-placeholder"><span aria-hidden="true">+</span>Add a widget</span>
+  </button>
+  <button class="metric-display-card metric-card-rose" type="button">
+    <span class="metric-card-dots" aria-hidden="true"></span>
+    <span class="metric-widget-placeholder"><span aria-hidden="true">+</span>Add a widget</span>
+  </button>
+</section>
+
+<div class="panel-layout" data-layout-key="skeleton-widgets-expanded">
+<section class="db-panel analytics-panel" data-panel-key="skeleton-analytics" data-default-span="4" data-panel-theme="emerald" data-panel-text="frost">
+  <div class="db-panel-hd db-panel-hd-analytics">
+    <span class="db-panel-title">Analytics</span>
+    {{ panel_customizer() }}
+  </div>
+  <div class="db-panel-body analytics-panel-body">
+    {{ add_widget_placeholder() }}
+  </div>
+</section>
+
+  <div class="db-panel" data-panel-key="skeleton-records" data-default-span="4" data-panel-theme="azure" data-panel-text="frost">
+    <div class="db-panel-hd db-panel-hd-items">
+      <span class="db-panel-title">{{ metric_label }}</span>
+      {{ panel_customizer() }}
+    </div>
+    <div class="db-panel-body">
+      {{ add_widget_placeholder() }}
+    </div>
+  </div>
+
+  <div class="db-panel" data-panel-key="skeleton-notifications" data-default-span="4" data-panel-theme="rose" data-panel-text="frost">
+    <div class="db-panel-hd db-panel-hd-notifications">
+      <span class="db-panel-title">Notifications</span>
+      {{ panel_customizer() }}
+    </div>
+    <div class="db-panel-body">
+      {{ add_widget_placeholder() }}
+    </div>
+  </div>
+</div>
+
+{% else %}
+<header class="app-header">
+  <div class="title-block">
+    <p class="product-label">Configurable Dashboard Skeleton</p>
+    <h1>Record intake portal</h1>
+    <p class="hero-text">Configure a source connector, parse records, score them with generic rules, and optionally log notification previews.</p>
+  </div>
+  <div class="status-pill">
+    <span></span>
+    <div>
+      <strong>Ready for configuration</strong>
+      <small>Connect a source when ready</small>
+    </div>
+  </div>
+</header>
+
+<section class="portal-grid">
+  <article class="connect-card">
+    <div class="connect-intro">
+      <p class="section-kicker">Setup</p>
+      <h2>Configure the first source</h2>
+      <p>Use the source settings as placeholders, then replace the connector with your project-specific integration.</p>
+    </div>
+    <form class="source-form" method="post" action="/settings/quick">
+      <div class="field">
+        <input id="app_name" name="app_name" value="{{ config.app_name }}" placeholder=" " autocomplete="off" required>
+        <label for="app_name">Application name</label>
+      </div>
+      <div class="field">
+        <input id="source_name" name="source_name" value="{{ config.source_name }}" placeholder=" " autocomplete="off" required>
+        <label for="source_name">Source name</label>
+      </div>
+      <div class="field wide">
+        <input id="source_description" name="source_description" value="{{ config.source_description }}" placeholder=" " autocomplete="off">
+        <label for="source_description">Source description</label>
+      </div>
+      <div class="action-row">
+        <button type="submit">Save configuration</button>
+      </div>
+    </form>
+    <div class="setup-help">
+      <div>
+        <span>Connector stub</span>
+        <code>app/source_connector.py</code>
+      </div>
+      <div>
+        <span>Parser stub</span>
+        <strong>Generic key-value payloads can be mapped into records.</strong>
+      </div>
+    </div>
+  </article>
+  <aside class="summary-card">
+    <p class="section-kicker">Live summary</p>
+    <h2>{{ stats.total | default(0) }} records parsed</h2>
+    <dl class="summary-list">
+      <div><dt>Critical records</dt><dd>{{ stats.critical | default(0) }}</dd></div>
+      <div><dt>Repeated categories</dt><dd>{{ stats.repeated | default(0) }}</dd></div>
+      <div><dt>Needs review</dt><dd>{{ stats.review | default(0) }}</dd></div>
+      <div><dt>Notifications</dt><dd>{{ stats.notifications_logged | default(0) }}</dd></div>
+    </dl>
+    <div class="scan-meta">
+      <span>Last sync</span>
+      <strong>{{ stats.last_sync_display or "Not synced yet" }}</strong>
+    </div>
+  </aside>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+{% set label = record.score_label or "Unknown" %}
+{% set resource = record.resource_display or record.resource or "Unspecified resource" %}
+{% set title = record.title or "Record detail" %}
+
+<section class="item-hero item-detail-hero">
+  <div class="item-hero-copy">
+    <span class="db-brand-label">Record detail</span>
+    <h1 title="{{ title }}">{{ title }}</h1>
+    <p class="item-hero-meta">
+      <span title="{{ resource }}">{{ resource }}</span>
+      <span>{{ record.received_display or record.received_time }}</span>
+    </p>
+  </div>
+  <a class="cmd-btn cmd-btn-ghost" href="/dashboard">Back to dashboard</a>
+</section>
+
+<section class="item-summary-band">
+  <article>
+    <span>Score label</span>
+    <strong><span class="sev-tag sev-{{ label | lower }}">{{ label }}</span></strong>
+  </article>
+  <article>
+    <span>Resource</span>
+    <strong>{{ resource }}</strong>
+  </article>
+  <article>
+    <span>Status</span>
+    <strong>{{ record.status or "Not found" }}</strong>
+  </article>
+  <article>
+    <span>Owner</span>
+    <strong>{{ record.owner_display or "Unassigned" }}</strong>
+  </article>
+</section>
+
+<section class="item-detail-layout">
+  <article class="item-panel item-panel-main">
+    <div class="item-panel-head">
+      <div>
+        <span class="section-kicker">Record</span>
+        <h2>Summary</h2>
+      </div>
+    </div>
+    <dl class="detail-list detail-list-featured">
+      <dt>Title</dt><dd>{{ record.title or "Not found" }}</dd>
+      <dt>Source</dt><dd>{{ record.source or "Not found" }}</dd>
+      <dt>Category</dt><dd>{{ record.category or "Not found" }}</dd>
+      <dt>Status</dt><dd>{{ record.status or "Not found" }}</dd>
+      <dt>Summary</dt><dd>{{ record.summary or "Not found" }}</dd>
+      <dt>Details</dt><dd>{{ record.details or "Not found" }}</dd>
+      <dt>Score</dt><dd>{{ record.score if record.score is not none else "Not scored" }}</dd>
+    </dl>
+  </article>
+
+  <article class="item-panel notification-panel">
+    <div class="item-panel-head">
+      <div>
+        <span class="section-kicker">Notification</span>
+        <h2>{{ "Logged" if notification else "Not logged" }}</h2>
+      </div>
+    </div>
+    <dl class="detail-list">
+      <dt>Reason</dt><dd>{{ notification.reason if notification else "No notification record" }}</dd>
+      <dt>Created</dt><dd>{{ notification.created_at if notification else "Never" }}</dd>
+      <dt>Fingerprint</dt><dd>{{ notification.fingerprint if notification else "None" }}</dd>
+    </dl>
+  </article>
+
+  <article class="item-panel">
+    <div class="item-panel-head">
+      <div>
+        <span class="section-kicker">Ownership</span>
+        <h2>Record Context</h2>
+      </div>
+    </div>
+    <dl class="detail-list">
+      <dt>Owner</dt><dd>{{ record.owner or "Not found" }}</dd>
+      <dt>Resource</dt><dd>{{ record.resource or "Not found" }}</dd>
+      <dt>External ID</dt><dd>{{ record.external_id or "Not found" }}</dd>
+      <dt>Policy version</dt><dd>{{ record.policy_version or "Not found" }}</dd>
+    </dl>
+  </article>
+
+  <article class="item-panel">
+    <div class="item-panel-head">
+      <div>
+        <span class="section-kicker">History</span>
+        <h2>Historical Matches</h2>
+      </div>
+    </div>
+    <div class="item-table-wrap">
+      <table class="compact-table">
+        <thead>
+          <tr><th>Received</th><th>Resource</th><th>Category</th><th>Score</th></tr>
+        </thead>
+        <tbody>
+          {% for match in matches %}
+            <tr>
+              <td>{{ match.received_display or match.received_time }}</td>
+              <td>{{ match.resource or "Unknown" }}</td>
+              <td>{{ match.category or "Unknown" }}</td>
+              <td><span class="sev-tag sev-{{ (match.score_label or 'unknown') | lower }}">{{ match.score_label or "Unknown" }}</span></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4" class="al-empty">No prior matches for this category and resource.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+<section class="item-panel raw-panel">
+  <div class="item-panel-head">
+    <div>
+      <span class="section-kicker">Source payload</span>
+      <h2>Raw Payload</h2>
+    </div>
+  </div>
+  <pre>{{ record.raw_payload }}</pre>
+</section>
+
+<section class="item-panel metadata-panel">
+  <div class="item-panel-head">
+    <div>
+      <span class="section-kicker">Metadata</span>
+      <h2>Parser Fields</h2>
+    </div>
+  </div>
+  <dl class="detail-list metadata-list">
+    <dt>Record ID</dt><dd>{{ record.id }}</dd>
+    <dt>External ID</dt><dd>{{ record.external_id or "Not found" }}</dd>
+    <dt>Received</dt><dd>{{ record.received_display or record.received_time or "Not found" }}</dd>
+    <dt>Created</dt><dd>{{ record.created_at or "Not found" }}</dd>
+  </dl>
+</section>
+{% endblock %}

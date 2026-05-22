@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="app-nav settings-nav">
+  <div class="settings-brand-group">
+    <a class="settings-brand-switch settings-brand-skeleton" href="/dashboard" aria-label="Dashboard">Skeleton</a>
+    <span class="settings-brand-copy">
+      <strong>Configure</strong>
+      <small>Dashboard skeleton settings</small>
+    </span>
+  </div>
+  <div class="app-nav-status" aria-label="Configuration status">
+    <div class="nav-status-item">
+      <span class="nav-icon nav-icon-mail" aria-hidden="true"></span>
+      <span>
+        <strong>{{ config.source_name or "Source" }}</strong>
+        <small>{% if config.source_poll_enabled %}Source polling enabled{% else %}Source polling disabled{% endif %}</small>
+      </span>
+    </div>
+    <div class="nav-status-item">
+      <span class="nav-icon nav-icon-sync" aria-hidden="true"></span>
+      <span>
+        <strong>{% if config.last_sync_display %}Sync healthy{% else %}Not synced yet{% endif %}</strong>
+        <small>Last sync {{ config.last_sync_display or "N/A" }}</small>
+      </span>
+    </div>
+  </div>
+  <div class="app-nav-actions">
+    <a class="cmd-btn" id="settings-dashboard-btn" href="/dashboard" data-href="/dashboard"><span class="btn-icon btn-icon-dashboard" aria-hidden="true"></span>Dashboard</a>
+    {% if config.source_poll_enabled %}
+      <form method="post" action="/settings/disconnect">
+        <button class="cmd-btn cmd-btn-danger" type="submit"><span class="btn-icon btn-icon-disconnect" aria-hidden="true"></span>Disconnect</button>
+      </form>
+    {% endif %}
+  </div>
+</header>
+
+{% if request.query_params.get("saved") %}
+  <p class="sync-note">Configuration saved{% if request.query_params.get("rescored") %}; {{ request.query_params.get("rescored") }} records rescored{% endif %}.</p>
+{% endif %}
+{% if request.query_params.get("disconnected") %}
+  <p class="sync-note">Source configuration disconnected.</p>
+{% endif %}
+
+<form id="settings-form" class="settings-form clean-settings-form" method="post" action="/settings">
+  <section class="form-section">
+    <div class="section-heading">
+      <h2>Application</h2>
+      <p>Neutral display settings for the reusable dashboard shell.</p>
+    </div>
+    <div class="form-grid">
+      <label class="fl-wrap">
+        <input name="app_name" value="{{ config.app_name }}" autocomplete="off" placeholder=" ">
+        <span class="fl-lbl">Application name</span>
+      </label>
+      <label class="fl-wrap">
+        <input name="source_name" value="{{ config.source_name }}" autocomplete="off" placeholder=" ">
+        <span class="fl-lbl">Source name</span>
+      </label>
+      <label class="full-span">
+        <span class="lbl-fixed">Source description</span>
+        <textarea name="source_description" rows="4">{{ config.source_description }}</textarea>
+      </label>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <div class="section-heading">
+      <h2>Source connector</h2>
+      <p>The bundled connector is a stub. Replace it with project-specific source logic when adapting the skeleton.</p>
+    </div>
+    <div class="form-grid">
+      <label class="fl-wrap">
+        <input type="number" min="1" name="lookback_days" value="{{ config.lookback_days }}" placeholder=" ">
+        <span class="fl-lbl">Lookback days</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" min="1" name="source_poll_interval_seconds" value="{{ config.source_poll_interval_seconds }}" placeholder=" ">
+        <span class="fl-lbl">Poll interval seconds</span>
+      </label>
+      <label class="fl-wrap full-span">
+        <input name="parser_required_fields" value="{{ config.parser_required_fields }}" placeholder=" ">
+        <span class="fl-lbl">Required parser fields</span>
+      </label>
+      <label class="switch-row full-span">
+        <input type="checkbox" name="source_poll_enabled" {% if config.source_poll_enabled %}checked{% endif %}>
+        <span>
+          <strong>Enable background polling</strong>
+          <small>Keep disabled until a real source connector has been implemented.</small>
+        </span>
+      </label>
+    </div>
+  </section>
+
+  <section class="form-section delivery-section">
+    <div class="section-heading">
+      <h2>Notification hook</h2>
+      <p>Notifications are logged locally by default. Implement the hook interface before sending externally.</p>
+    </div>
+    <div class="form-grid">
+      <label>
+        <span class="lbl-fixed">Notification hook URL</span>
+        <div class="secret-control">
+          <input type="password" name="notification_hook_url" placeholder="{{ config.notification_hook_url_masked or 'Optional project-specific hook URL' }}" data-secret data-validate="url" autocomplete="off">
+          <button class="icon-btn secret-toggle" type="button" aria-label="Reveal notification hook URL" title="Reveal">Show</button>
+          <button class="icon-btn secret-copy" type="button" aria-label="Copy notification hook URL" title="Copy">Copy</button>
+        </div>
+        <small class="field-error"></small>
+      </label>
+      <label>
+        <span class="lbl-fixed">Notification cooldown hours</span>
+        <input type="number" min="1" name="notification_cooldown_hours" value="{{ config.notification_cooldown_hours }}">
+      </label>
+      <label class="fl-wrap">
+        <input type="number" min="0" max="100" name="notification_min_score" value="{{ config.notification_min_score }}" placeholder=" ">
+        <span class="fl-lbl">Notification minimum score</span>
+      </label>
+      <label class="switch-row full-span">
+        <input type="checkbox" name="notification_preview_mode" {% if config.notification_preview_mode %}checked{% endif %}>
+        <span>
+          <strong>Local preview mode</strong>
+          <small>Keep enabled while testing. Turn off only after implementing a real notification sender.</small>
+        </span>
+      </label>
+    </div>
+  </section>
+
+  <section class="form-section severity-section" id="rule-engine">
+    <div class="section-heading">
+      <h2>Rule engine</h2>
+      <p>Final score = default score + configured label rules + generic repeat and source-volume context. Existing records are rescored when you save.</p>
+    </div>
+
+    <div class="logic-card">
+      <strong>Current logic</strong>
+      <span>Critical if score >= {{ config.score_critical_threshold }}. High if >= {{ config.score_high_threshold }}. Medium if >= {{ config.score_medium_threshold }}. Otherwise Low.</span>
+      <span>Records at or above {{ config.notification_min_score }} are eligible for notification previews, capped by the configured cooldown.</span>
+    </div>
+
+    <div class="form-grid scoring-grid">
+      <input type="hidden" name="rule_preset" id="rule_preset" value="{{ config.rule_preset or 'generic' }}">
+
+      <div class="score-group-title full-span">Label rules</div>
+      <label class="full-span">
+        <span class="lbl-fixed">Score rules</span>
+        <textarea name="score_rules" rows="8" spellcheck="false">{{ config.score_rules }}</textarea>
+      </label>
+
+      <div class="score-group-title full-span">Score buckets</div>
+      <label class="fl-wrap">
+        <input type="number" min="0" max="100" name="default_score" value="{{ config.default_score }}" placeholder=" ">
+        <span class="fl-lbl">Default score</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" min="0" max="100" name="score_critical_threshold" value="{{ config.score_critical_threshold }}" placeholder=" ">
+        <span class="fl-lbl">Critical threshold</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" min="0" max="100" name="score_high_threshold" value="{{ config.score_high_threshold }}" placeholder=" ">
+        <span class="fl-lbl">High threshold</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" min="0" max="100" name="score_medium_threshold" value="{{ config.score_medium_threshold }}" placeholder=" ">
+        <span class="fl-lbl">Medium threshold</span>
+      </label>
+
+      <div class="score-group-title full-span">Repeated category and resource</div>
+      <label class="fl-wrap">
+        <input type="number" min="1" name="repeat_window_hours" value="{{ config.repeat_window_hours }}" placeholder=" ">
+        <span class="fl-lbl">Repeat window hours</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" name="repeat_1_adjustment" value="{{ config.repeat_1_adjustment }}" placeholder=" ">
+        <span class="fl-lbl">Repeat once adjustment</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" name="repeat_2_adjustment" value="{{ config.repeat_2_adjustment }}" placeholder=" ">
+        <span class="fl-lbl">Repeat twice adjustment</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" name="repeat_3_adjustment" value="{{ config.repeat_3_adjustment }}" placeholder=" ">
+        <span class="fl-lbl">Repeat 3+ adjustment</span>
+      </label>
+
+      <div class="score-group-title full-span">Source volume</div>
+      <label class="fl-wrap">
+        <input type="number" min="1" name="source_volume_window_hours" value="{{ config.source_volume_window_hours }}" placeholder=" ">
+        <span class="fl-lbl">Source volume window hours</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" min="1" name="source_volume_threshold" value="{{ config.source_volume_threshold }}" placeholder=" ">
+        <span class="fl-lbl">Source volume threshold</span>
+      </label>
+      <label class="fl-wrap">
+        <input type="number" name="source_volume_adjustment" value="{{ config.source_volume_adjustment }}" placeholder=" ">
+        <span class="fl-lbl">Source volume adjustment</span>
+      </label>
+    </div>
+
+    <div class="score-preview">
+      <div class="score-preview-head">
+        <strong>Rule preview</strong>
+        <span>Try a record before saving.</span>
+      </div>
+      <div class="form-grid">
+        <label class="fl-wrap">
+          <input id="preview-title" value="Priority metric crossed threshold" placeholder=" ">
+          <span class="fl-lbl">Title</span>
+        </label>
+        <label class="fl-wrap">
+          <input id="preview-source" value="Analytics" placeholder=" ">
+          <span class="fl-lbl">Source</span>
+        </label>
+        <label class="fl-wrap">
+          <input id="preview-category" value="Metric" placeholder=" ">
+          <span class="fl-lbl">Category</span>
+        </label>
+        <label class="fl-wrap">
+          <input id="preview-status" value="Priority" placeholder=" ">
+          <span class="fl-lbl">Status</span>
+        </label>
+        <label class="fl-wrap">
+          <input id="preview-resource" value="Metric Set 7" placeholder=" ">
+          <span class="fl-lbl">Resource</span>
+        </label>
+        <button class="cmd-btn" id="score-preview-btn" type="button">Calculate score</button>
+      </div>
+      <div class="preview-result" id="score-preview-result">Preview has not run yet.</div>
+    </div>
+  </section>
+
+  <div class="sticky-save">
+    <button class="cmd-btn cmd-btn-success" id="settings-save-btn" type="submit">
+      <span class="save-spinner" aria-hidden="true"></span>
+      <span class="save-label">Save configuration</span>
+    </button>
+    <span id="settings-dirty-note">Background polling stays disabled until you enable it; rescoring runs after save.</span>
+  </div>
+</form>
+{% endblock %}

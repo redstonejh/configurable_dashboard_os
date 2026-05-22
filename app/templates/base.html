@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configurable Dashboard Skeleton</title>
+  <script>
+    (() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("reset_layout")) {
+          Object.keys(localStorage)
+            .filter((key) => key.startsWith("dashboard-panel-layout:"))
+            .forEach((key) => localStorage.removeItem(key));
+          params.delete("reset_layout");
+          const nextQuery = params.toString();
+          window.history.replaceState(null, "", window.location.pathname + (nextQuery ? `?${nextQuery}` : ""));
+        }
+        const theme = localStorage.getItem("dashboard-theme");
+        if (theme === "dark") document.documentElement.dataset.theme = "dark";
+      } catch {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/style.css?v=20260522-refactor9">
+</head>
+<body>
+  <main class="page">
+    {% if error %}
+      <section class="notice error">{{ error }}</section>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+  <script src="/static/app.js?v=20260522-refactor9"></script>
+</body>
+</html>

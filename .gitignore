@@ -1,0 +1,66 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.pfx
+*.crt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.venv/
+venv/
+env/
+ENV/
+
+# Test, coverage, and type-checking caches
+.pytest_cache/
+.pytest_tmp/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Local runtime data
+data/
+logs/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.log
+.uvicorn.pid
+.uvicorn*.log
+
+# Local server/render artifacts
+server_dashboard.html
+server_settings.html
+server.log
+style_check.css
+
+# Build/package artifacts
+build/
+dist/
+*.egg-info/
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*.code-workspace
+.vscode/
+.idea/
+
+# Agent and local workflow artifacts
+.agent_pipeline/
+.claude/
+AGENTS.md
