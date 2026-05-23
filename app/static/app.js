@@ -61,6 +61,47 @@ document.addEventListener("DOMContentLoaded", () => {
     violet: "#ddd6fe",
   };
 
+  const confirmAction = ({ title = "Confirm action", message = "Continue?", confirmLabel = "Continue", cancelLabel = "Cancel" } = {}) => (
+    new Promise((resolve) => {
+      const overlay = document.createElement("div");
+      overlay.className = "modal-backdrop";
+      overlay.innerHTML = `
+        <section class="app-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+          <div class="app-modal-copy">
+            <h2 id="confirm-modal-title"></h2>
+            <p></p>
+          </div>
+          <div class="app-modal-actions">
+            <button class="cmd-btn cmd-btn-ghost modal-cancel" type="button"></button>
+            <button class="cmd-btn cmd-btn-danger modal-confirm" type="button"></button>
+          </div>
+        </section>
+      `;
+      overlay.querySelector("h2").textContent = title;
+      overlay.querySelector("p").textContent = message;
+      overlay.querySelector(".modal-cancel").textContent = cancelLabel;
+      overlay.querySelector(".modal-confirm").textContent = confirmLabel;
+      document.body.appendChild(overlay);
+      const cancel = overlay.querySelector(".modal-cancel");
+      const confirm = overlay.querySelector(".modal-confirm");
+      const close = (value) => {
+        overlay.classList.remove("modal-open");
+        window.setTimeout(() => overlay.remove(), 160);
+        resolve(value);
+      };
+      window.requestAnimationFrame(() => overlay.classList.add("modal-open"));
+      cancel.focus();
+      cancel.addEventListener("click", () => close(false));
+      confirm.addEventListener("click", () => close(true));
+      overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) close(false);
+      });
+      overlay.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") close(false);
+      });
+    })
+  );
+
   const defaultThemeForPanel = (panel) => {
     if (panel.dataset.panelTheme && panel.dataset.panelTheme !== "default") return panel.dataset.panelTheme;
     if (panel.querySelector(".db-panel-hd-analytics")) return "emerald";
@@ -169,7 +210,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
   try {
-    applyThemeMode(localStorage.getItem("dashboard-theme") || "");
+    const requestedTheme = new URLSearchParams(window.location.search).get("theme");
+    applyThemeMode(requestedTheme || localStorage.getItem("dashboard-theme") || "");
   } catch {
     applyThemeMode("");
   }
@@ -481,7 +523,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  document.addEventListener("click", (event) => {
+  document.addEventListener("click", async (event) => {
     const actionButton = event.target.closest("[data-panel-action]");
     if (actionButton) {
       const customizer = actionButton.closest(".panel-customizer");
@@ -526,9 +568,16 @@ document.addEventListener("DOMContentLoaded", () => {
         customizer?.classList.toggle("panel-palette-open", open);
         setPanelCustomizerOpen(customizer, open);
       }
-      if (action === "delete" && window.confirm("Delete this panel? Reset restores it.")) {
-        panel.classList.add("panel-deleted");
-        writePanelState(panel, { deleted: true });
+      if (action === "delete") {
+        const confirmed = await confirmAction({
+          title: "Delete panel",
+          message: "This removes the panel from the dashboard. Reset restores the default layout.",
+          confirmLabel: "Delete panel",
+        });
+        if (confirmed) {
+          panel.classList.add("panel-deleted");
+          writePanelState(panel, { deleted: true });
+        }
       }
       return;
     }
@@ -569,6 +618,18 @@ document.addEventListener("DOMContentLoaded", () => {
     menu?.addEventListener("mouseenter", () => window.clearTimeout(closeTimer));
     menu?.addEventListener("mouseleave", () => closeSoon());
   });
+
+  try {
+    if (new URLSearchParams(window.location.search).get("visual_modal") === "1") {
+      window.setTimeout(() => {
+        confirmAction({
+          title: "Delete panel",
+          message: "This removes the panel from the dashboard. Reset restores the default layout.",
+          confirmLabel: "Delete panel",
+        });
+      }, 250);
+    }
+  } catch {}
 
   document.addEventListener("click", (event) => {
     const activeCustomizer = event.target.closest(".panel-customizer");

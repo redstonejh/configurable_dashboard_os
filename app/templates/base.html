@@ -18,11 +18,14 @@
           window.history.replaceState(null, "", window.location.pathname + (nextQuery ? `?${nextQuery}` : ""));
         }
         const theme = localStorage.getItem("dashboard-theme");
-        if (theme === "dark") document.documentElement.dataset.theme = "dark";
+        const requestedTheme = params.get("theme");
+        if (requestedTheme === "dark") document.documentElement.dataset.theme = "dark";
+        else if (requestedTheme === "light") delete document.documentElement.dataset.theme;
+        else if (theme === "dark") document.documentElement.dataset.theme = "dark";
       } catch {}
     })();
   </script>
-  <link rel="stylesheet" href="/static/style.css?v=20260522-refactor18">
+  <link rel="stylesheet" href="/static/style.css?v=20260522-tokenpass3">
 </head>
 <body>
   <main class="page">
@@ -32,6 +35,6 @@
     {% block content %}{% endblock %}
   </main>
   <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
-  <script src="/static/app.js?v=20260522-refactor18"></script>
+  <script src="/static/app.js?v=20260522-tokenpass3"></script>
 </body>
 </html>
