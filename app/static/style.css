@@ -142,6 +142,7 @@ body.panel-interacting {
   animation: none !important;
 }
 
+/* TODO: Dark mode still looks terrible and the top bar is a mess; revisit this control system. */
 /* Toolbar */
 .dashboard-toolbar,
 .app-nav {
